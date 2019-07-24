@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <% include partials/head.ejs %>
+</head>
+
+<body>
+    <header>
+        <% include partials/header.ejs %>
+    </header>
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            <div class="col-8">
+                <% if(successMsg){ %>
+                <div class="alert alert-success" role="alert">
+                    <%= successMsg %>
+                </div>
+                <% }else if (error){ %>
+                <div class="alert alert-danger" role="alert">
+                    <%= error %>
+                </div>
+                <% } %>
+
+                <form method="POST" action="/api/addsubcategory">
+                    <div class="form-group">
+                        <label for="select-top-ctg-name">Select Top category</label>
+                        <select name="top_ctg_name" id="select-top-ctg-name" class="form-control select-top-ctg-name">
+                            <option value="select">Select</option>
+                            <% topCategories.forEach( ctg => { %>
+                            <option value="<%= ctg %>"><%= ctg.replace("_", " ").toUpperCase() %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sub-ctg-name">Sub Category</label>
+                        <input class="form-control" id="sub-ctg-name" type="text" name="sub_ctg_name" required
+                            placeholder="Enter Sub category name" />
+                    </div>
+                    <div class="form-group">
+                        <input class="btn btn-primary" type="submit" required value="Add" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

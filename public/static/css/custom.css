@@ -1,0 +1,59 @@
+body {
+    padding-top: 120px;
+}
+
+.author, .date {
+    color: #999999;
+}
+
+.post-desc {
+    font-size: 1.2em;
+}
+
+p.filename {
+    margin: 0;
+}
+
+ /* uploadfile  -- selected files styling */
+.files-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.files-list li {
+    margin: 0 .4rem .4rem 0;
+    background: steelblue;
+    color: #fff;
+}
+
+.delete-btn {
+    display: none;
+}
+
+.files-list li:hover .delete-btn {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: tomato;
+    padding: .2rem;
+    text-decoration: none;
+    color: #fff;
+    border-radius: 0 .1rem 0 0;
+}
+
+/* searchresults.ejs */
+
+.file-link {
+    display: inline-block;
+    margin: .1rem;
+    padding: .2rem;
+}
+
+.file-link:hover {
+    text-decoration: none;
+    color: #fff;
+    background: #007bff;
+    padding: .3rem;
+}

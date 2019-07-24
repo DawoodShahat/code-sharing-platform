@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <% include partials/head.ejs %>
+</head>
+
+<body>
+    <header>
+        <% include partials/header.ejs %>
+    </header>
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            <div class="col-8">
+                <h1 class="mb-3"><%= pagetitle %></h1>
+                <ul class="list-group">
+                    <% categoryFunction.forEach(item => { %>
+                    <li class="list-group-item">
+                        <a href="<%= item.url %>"><%= item.title %></a>
+                    </li>
+                    <% }); %>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

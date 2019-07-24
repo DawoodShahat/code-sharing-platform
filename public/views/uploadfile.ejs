@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+  <% include partials/head.ejs %>
+  <script src="/../static/js/changectg.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <% include partials/header.ejs %>
+  </header>
+  <div class="container">
+    <div class="row d-flex justify-content-center">
+      <div class="col-8" id="col-container">
+        <h1 class="mb-4"><%= pagetitle %></h1>
+        <% if(error){ %>
+        <div class="alert alert-danger">
+          <%= error %>
+        </div>
+        <% }else if (successMsg){ %>
+        <div class="alert alert-success">
+          <%= successMsg %>
+        </div>
+        <% } %>
+        <form enctype="multipart/form-data" method="POST" action="/api/uploadfile">
+          <div class="form-group">
+            <label for="select-top-ctg-name">Select Top category</label>
+            <select name="top_ctg_name" id="select-top-ctg-name" class="selectpicker form-control select-top-ctg-name">
+              <option value="select">Select</option>
+              <% topCategories.forEach( ctg => { %>
+              <option value="<%= ctg %>"><%= ctg.replace("_", " ").toUpperCase() %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="select-sub-ctg-name">Select Sub category</label>
+            <select name="sub_ctg_name" id="select-sub-ctg-name" class="selectpicker form-control select-sub-ctg-name">
+              <option value="select">Select</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" class="form-control" name="author" id="author" required placeholder="Enter you name">
+          </div>
+          <div class="custom-file mb-3 mt-3">
+            <input type="file" class="custom-file-input" id="file-1" name="test-file" multiple>
+            <label class="custom-file-label" for="file-1">Choose files</label>
+          </div>
+          <ul class="list-group files-list">
+          </ul>
+          <div class="form-group mt-3">
+            <input class="btn btn-primary" type="submit" value="Submit" />
+          </div>
+        </form>
+        <script type="application/javascript">
+          document.addEventListener('DOMContentLoaded', function () {
+
+            const fileInputElm = document.querySelector('input[type=file]');
+            const topCtgElm = document.getElementById("select-top-ctg-name");
+            const subCtgElm = document.getElementById("select-sub-ctg-name");
+            const authorNameElm = document.getElementById("author");
+
+
+            let filesToBeSubmitted = [];
+
+            const submitElm = document.querySelector('input[type=submit]');
+
+            submitElm.addEventListener('click', e => {
+              e.preventDefault();
+              let formData = new FormData();
+              formData.append('top_ctg_name', topCtgElm.value);
+              formData.append('sub_ctg_name', subCtgElm.value);
+              formData.append('author', authorNameElm.value);
+
+              filesToBeSubmitted.forEach(file => {
+                formData.append('test-file', file);
+              });
+
+              fetch('/api/uploadfile', {
+                method: 'POST',
+                body: formData
+              })
+                .then(response => response.json())
+                .then(result => {
+                  if (result.error) {
+                    window.location.assign('/api/uploadfile/?errors=' + result.error);
+                  } else {
+                    window.location.assign('/api/uploadfile/?successMsg=' + result.successMsg);
+                  }
+                })
+                .catch(errors => {
+                  window.location.assign('/api/uploadfile/?errors=' + errors);
+                });
+            });
+
+            // files selection and removal
+            fileInputElm.addEventListener('change', e => {
+
+              const listGroupElm = document.querySelector('.list-group');
+              let filesCountLabelElm = e.target.nextElementSibling;
+
+              // update ui according to the selected files
+              createAppendListItems(e.target.files, listGroupElm);
+
+              // keep track of selected files in an array, avoid duplicates, enable choosing files from different folders
+              addNewFilesToList(e.target.files);
+
+              const deleteBtnElm = document.querySelectorAll('.delete-btn');
+              deleteBtnElm.forEach(item => item.addEventListener('click', handleRemoveFileFromSelection));
+
+
+              function handleRemoveFileFromSelection(e){
+                // removes file from filetracking array
+                removeFilesFromList(e.target.parentElement.firstChild.innerHTML);
+                // update the ui accordingly
+                listGroupElm.removeChild(e.target.parentElement);
+
+                setFileLabel(filesToBeSubmitted.length, filesCountLabelElm);
+              }
+
+
+              // updates ui according to the number of files selected
+              let filesCount = filesToBeSubmitted.length;
+              setFileLabel(filesCount, filesCountLabelElm);
+
+            });
+
+
+            /* HELPERS */ 
+            // updates ui according to the number of files selected
+            // create and append ListItem for each and every file selected
+            function createAppendListItems([...newFiles], listGroupElm) {
+              newFiles.forEach(file => {
+                if (!includesFile(file)) {
+                  let fileListItem = document.createElement('li');
+
+                  let textElm = document.createElement('span');
+                  textElm.appendChild(document.createTextNode(file.name));
+                  fileListItem.appendChild(textElm);
+
+                  // to remove the selected file from the files list to be updated
+                  let deleteBtn = document.createElement('a');
+                  deleteBtn.classList.add('delete-btn');
+                  deleteBtn.setAttribute('href', '#');
+                  deleteBtn.appendChild(document.createTextNode('x'));
+
+                  fileListItem.appendChild(deleteBtn);
+
+                  fileListItem.classList.add('list-group-item');
+                  listGroupElm.appendChild(fileListItem);
+                }
+              })
+            }
+
+            function setFileLabel(filesCount, filesCountLabelElm){
+              let filesCountLabel = filesCount > 1 ? `${filesCount} files` : `${filesCount} file`;
+              filesCountLabelElm.innerHTML = filesCountLabel;
+            }
+
+            function removeFilesFromList(filename){
+              const updatedList = filesToBeSubmitted.filter(item => item.name != filename )
+              filesToBeSubmitted = updatedList;
+            }
+
+            // add new files to `files to be submitted` list and avoid duplicates
+            function addNewFilesToList([...newFiles]) {
+              newFiles.forEach(file => {
+                if (!includesFile(file)) {
+                  filesToBeSubmitted.push(file)
+                }
+              });
+
+            }
+            // checks if a file object exists in filesToBeSubmitted
+            function includesFile(obj) {
+              for (let i = 0; i < filesToBeSubmitted.length; i++) {
+                if (filesToBeSubmitted[i].name == obj.name) {
+                  return true;
+                }
+              }
+              return false;
+            }
+          });
+        </script>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

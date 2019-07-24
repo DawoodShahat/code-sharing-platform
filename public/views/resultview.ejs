@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <% include partials/head.ejs %>
+    <!-- npm install it on server side -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+</head>
+
+<body>
+    <header>
+        <% include partials/header.ejs %>
+    </header>
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            <div class="col-10">
+                <p class="post-desc">
+                    Posted by <span class="author"> <%= author %> </span> on <span class="date"><%= date %></span>
+                </p>
+                <article>
+                    <% files.forEach(item => { %>
+                    <p class="filename"><%= item.fileName %></p>
+                    <pre>
+                        <code class="gherkin">
+<%= item.stringFile %>
+                        </code>
+                    </pre>
+                    <% }); %>
+                </article>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
