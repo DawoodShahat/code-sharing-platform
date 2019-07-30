@@ -9,6 +9,7 @@ const uploadfile = require('./routes/api/uploadfile');
 const addCategory = require('./routes/api/addCategory');
 const search = require('./routes/api/search');
 const index = require('./routes/api/index');
+const confirmfiles = require('./routes/api/confirmfiles');
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -25,6 +26,7 @@ app.use('/', index);
 app.use('/api', uploadfile);
 app.use('/api', addCategory);
 app.use('/api', search);
+app.use('/api', confirmfiles);
 
 // basic config
 const listener = app.listen(process.env.PORT || 3000, () => {

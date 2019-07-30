@@ -1,0 +1,21 @@
+{
+  "name": "cafe-docs-tool",
+  "version": "1.0.0",
+  "description": "A platform where you can share test cases",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Said Dawood",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "dotenv": "^8.0.0",
+    "ejs": "^2.6.1",
+    "express": "^4.17.1",
+    "express-validator": "^6.1.1",
+    "mongo": "^0.1.0",
+    "mongoose": "^5.6.3",
+    "multer": "^1.4.1"
+  }
+}

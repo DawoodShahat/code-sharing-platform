@@ -123,12 +123,14 @@ router.post("/uploadfile", queryAllCategories,
             });
         };
 
-        const createNewFiles = (fileItemIds, keywordsList, objectID) => {
+        const createNewFiles = (fileItemIds, keywordsList, objectID, subCtgID) => {
             return new Files({
                 _id: objectID,
                 author: req.body.author,
                 fileItems: fileItemIds,
-                keywords: keywordsList
+                isConfirmed: false,
+                keywords: keywordsList,
+                subCtg: subCtgID
             })
         };
 
@@ -138,33 +140,40 @@ router.post("/uploadfile", queryAllCategories,
         const listOfFileItemsCreated = arrOfFileItems(req.files, filesObjectID);
         const listOfFileItemsIds = listOfFileItemsCreated.map(file => file._id);
 
-        const newFiles = createNewFiles(listOfFileItemsIds, extractKeywordsFromFiles(req.files), filesObjectID);
+        SubCategory.find({ sub_ctg_name: req.body.sub_ctg_name }, (err, doc) => {
 
+            const newFiles = createNewFiles(listOfFileItemsIds, extractKeywordsFromFiles(req.files), filesObjectID, doc[0]._id);
+            // saves files
+            newFiles.save(result => {
+                SubCategory.findOneAndUpdate(
+                    { sub_ctg_name: req.body.sub_ctg_name },
+                    {
+                        $push: {
+                            files: newFiles._id
+                        }
+                    },
+                    {
+                        new: true
+                    },
+                    (err, doc) => {
+                        if (err) res.json({ error: err });
+                        res.json({
+                            successMsg: "New Files are Successfully Added"
+                        })
+                    }
+                );
+            });
+        });
+
+
+        // saves fileItems
         listOfFileItemsCreated.forEach(item => {
             item.save((err, result) => {
                 if (err) res.json({ error: err });
             });
         });
 
-        newFiles.save(result => {
-            SubCategory.findOneAndUpdate(
-                { sub_ctg_name: req.body.sub_ctg_name },
-                {
-                    $push: {
-                        files: newFiles._id
-                    }
-                },
-                {
-                    new: true
-                },
-                (err, doc) => {
-                    if (err) res.json({ error: err });
-                    res.json({
-                        successMsg: "New Files are Successfully Added"
-                    })
-                }
-            );
-        });
+
     });
 
 module.exports = router;

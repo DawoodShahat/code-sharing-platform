@@ -128,34 +128,37 @@ router.post("/addsubcategory", queryAllCategories, [
         })
     }
 
-    const newSubCategory = new SubCategory({
-        _id: mongoose.Types.ObjectId(),
-        sub_ctg_name: req.body.sub_ctg_name
-    });
+    TopCategory.find({ top_ctg_name: req.body.top_ctg_name }, (err, doc) => {
+        const newSubCategory = new SubCategory({
+            _id: mongoose.Types.ObjectId(),
+            sub_ctg_name: req.body.sub_ctg_name,
+            topCtg: doc[0]._id
+        });
 
-    // saves new subcategory to db, and updates the specified top category according to sub categ
-    newSubCategory.save((err, ctg) => {
-        if (err) res.json({ error: err });
-        TopCategory.findOneAndUpdate(
-            { top_ctg_name: req.body.top_ctg_name },
-            {
-                $push: {
-                    sub_categories: newSubCategory._id
+        // saves new subcategory to db, and updates the specified top category according to sub categ
+        newSubCategory.save((err, ctg) => {
+            if (err) res.json({ error: err });
+            TopCategory.findOneAndUpdate(
+                { top_ctg_name: req.body.top_ctg_name },
+                {
+                    $push: {
+                        sub_categories: newSubCategory._id
+                    }
+                },
+                {
+                    new: true
+                },
+                (err, doc) => {
+                    if (err) res.json({ error: err });
+                    res.render('subcategory', {
+                        topCategories: res.locals.topCategories,
+                        pagetitle: "Add Sub Category",
+                        successMsg: "Sub Category is Successfully Added",
+                        error: false,
+                    })
                 }
-            },
-            {
-                new: true
-            },
-            (err, doc) => {
-                if (err) res.json({ error: err });
-                res.render('subcategory', {
-                    topCategories: res.locals.topCategories,
-                    pagetitle: "Add Sub Category",
-                    successMsg: "Sub Category is Successfully Added",
-                    error: false,
-                })
-            }
-        );
+            );
+        });
     });
 });
 

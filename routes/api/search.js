@@ -16,13 +16,14 @@ router.post("/search", (req, res) => {
     const topCtgName = req.body.top_ctg_name;
     const subCtgName = req.body.sub_ctg_name;
 
+    const pythonCommentExtractorRegex = new RegExp('\\"\\"\\"(.|[\r\n])*?\\"\\"\\"', 'g');
+
     if (topCtgName === 'select') {
         const query = qs.stringify({ errors: 'Specify the top category' });
         return res.redirect('/?' + query);
     }
 
     if (!subCtgName) {
-        console.log(subCtgName);
         TopCategory.find({ top_ctg_name: topCtgName })
             .populate({
                 path: 'sub_categories',
@@ -38,17 +39,21 @@ router.post("/search", (req, res) => {
             .exec((err, doc) => {
 
                 if (err) return res.json(err);
-                console.log(doc[0].sub_categories[0]);
-                console.log(doc[0].sub_categories[1]);
 
                 const searchResults = doc.map(ctgItem => {
                     return ctgItem.sub_categories.map(subCtg => {
-                        return subCtg.files.map(filesItem => {
-                            return filesItem.fileItems.map(item => ({ objectID: item._id, fileName: item.fileName }))
-                        });
+                        // filter out the files that aren't confirmed yet 
+                        return subCtg.files.filter(filesItem => filesItem.isConfirmed)
+                            .map(filesItem => {
+                                return filesItem.fileItems.map(item => {
+                                    const fileText = item.bufferFile.toString();
+                                    let fileDesc = fileText.match(pythonCommentExtractorRegex)[0] || "";
+                                    fileDesc =  fileDesc.replace(/[""":|]/gi, '').replace('Description', '').trim()
+                                    return { objectID: item._id, fileName: item.fileName, fileDesc: fileDesc }
+                                });
+                            });
                     });
                 });
-
 
                 return res.render('searchresults', {
                     pagetitle: 'Search Results',
@@ -57,59 +62,73 @@ router.post("/search", (req, res) => {
             });
     } else if (typeof subCtgName === 'string') {
 
-            // return results based on filter: ctg: top, sub
-            SubCategory.find({ sub_ctg_name: subCtgName })
-                .populate({
-                    path: 'files',
-                    populate: {
-                        path: 'fileItems',
-                        model: 'FileItem'
-                    }
-                })
-                .exec((err, doc) => {
+        // return results based on filter: ctg: top, sub
+        SubCategory.find({ sub_ctg_name: subCtgName })
+            .populate({
+                path: 'files',
+                populate: {
+                    path: 'fileItems',
+                    model: 'FileItem'
+                }
+            })
+            .exec((err, doc) => {
 
-                    const searchResults = doc[0].files.map(item => {
-                        return item.fileItems.map(fileItem => {
+                const searchResults = doc[0].files.filter(filesItem => filesItem.isConfirmed)
+                    .map(item => {
+                        return item.fileItems.map(fileItems => {
+                            const fileText = fileItems.bufferFile.toString();
+                            let fileDesc = fileText.match(pythonCommentExtractorRegex)[0] || "";
+                            fileDesc =  fileDesc.replace(/[""":|]/gi, '').replace('Description', '').trim()
                             return {
-                                objectID: fileItem._id,
-                                fileName: fileItem.fileName
+                                objectID: fileItems._id,
+                                fileName: fileItems.fileName,
+                                fileDesc: fileDesc
                             };
                         });
                     });
 
-                    res.render('searchresults', {
-                        pagetitle: 'Search Results',
-                        hits: searchResults
-                    })
 
-                });
-        } else {
-            // handle multiple file selection here
-            const multipleQueryObj = subCtgName.map(ctg => ({ sub_ctg_name: ctg }));
-            SubCategory.find({ $or: multipleQueryObj })
-                .populate({
-                    path: 'files',
-                    populate: {
-                        path: 'fileItems',
-                        model: 'FileItem'
-                    }
+
+                res.render('searchresults', {
+                    pagetitle: 'Search Results',
+                    hits: searchResults
                 })
-                .exec((err, doc) => {
 
-                    if (err) return res.json(err);
+            });
+    } else {
+        // handle multiple file selection here
+        const multipleQueryObj = subCtgName.map(ctg => ({ sub_ctg_name: ctg }));
+        SubCategory.find({ $or: multipleQueryObj })
+            .populate({
+                path: 'files',
+                populate: {
+                    path: 'fileItems',
+                    model: 'FileItem'
+                }
+            })
+            .exec((err, doc) => {
 
-                    const searchResults = doc.map(ctgItem => {
-                        return ctgItem.files.map(fileItem => {
-                            return fileItem.fileItems.map(item => ({ objectID: item._id, fileName: item.fileName }));
+                if (err) return res.json(err);
+
+                const searchResults = doc.map(ctgItem => {
+                    return ctgItem.files.filter(item => item.isConfirmed)
+                        .map(filesItem => {
+                            return filesItem.fileItems.map(item => {
+                                const fileText = item.bufferFile.toString();
+                                let fileDesc = fileText.match(pythonCommentExtractorRegex)[0] || "";
+                                fileDesc =  fileDesc.replace(/[""":|]/gi, '').replace('Description', '').trim()
+                                return { objectID: item._id, fileName: item.fileName, fileDesc: fileDesc }
+                            });
                         });
-                    });
-
-                    res.render('searchresults', {
-                        pagetitle: 'Search Results',
-                        hits: searchResults.flat(1)
-                    });
                 });
-        }
+
+
+                res.render('searchresults', {
+                    pagetitle: 'Search Results',
+                    hits: searchResults.flat(1)
+                });
+            });
+    }
 
 });
 
@@ -124,6 +143,8 @@ router.get('/search/:id', (req, res) => {
             const author = doc[0].files.author;
             const dateCreated = doc[0].files.dateCreated;
 
+            const fileText = doc[0].bufferFile.toString();
+
             if (err) return res.json(err);
             res.render('resultview', {
                 pagetitle: "File View",
@@ -131,7 +152,7 @@ router.get('/search/:id', (req, res) => {
                 date: dateCreated,
                 files: [{
                     fileName: doc[0].fileName,
-                    stringFile: doc[0].bufferFile.toString(),
+                    stringFile: fileText,
                     date: dateCreated,
                     author: author
                 }]

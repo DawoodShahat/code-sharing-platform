@@ -57,3 +57,9 @@ p.filename {
     background: #007bff;
     padding: .3rem;
 }
+
+/* confirm-files ui */
+
+.author-confirm {
+    font-size: 1.1em;
+}

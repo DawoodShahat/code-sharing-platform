@@ -7,6 +7,10 @@ const FilesSchema = Schema({
     type: Schema.Types.ObjectId,
     ref: "Category"
   },
+  isConfirmed: {
+    type: Boolean,
+    default: false
+  },
   author: {
     type: String,
     required: true
@@ -14,6 +18,10 @@ const FilesSchema = Schema({
   dateCreated: {
     type: Date,
     default: Date.now
+  },
+  subCtg: {
+    type: Schema.Types.ObjectId,
+    ref: "SubCategory"
   },
   fileItems: [
     {

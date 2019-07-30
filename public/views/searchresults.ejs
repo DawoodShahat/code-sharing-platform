@@ -13,7 +13,7 @@
         <div class="row d-flex justify-content-center">
             <div class="col-9">
                 <h1 class="mb-3"><%= pagetitle %></h1>
-                <% if(!hits || !hits.length){ %>
+                <% if(!hits || !hits.length || hits.includes('')){ %>
                 <ul class="list-group">
                     <li class="list-group-item">No Search Results</li>
                 </ul>
@@ -25,6 +25,9 @@
                         <a class="file-link" href="/api/search/<%= item.objectID %>">
                             <%= item.fileName %>
                         </a>
+                        <p>
+                            <%= item.fileDesc %>
+                        </p>
                         <% }); %>
                     </li>
                     <% }); %>

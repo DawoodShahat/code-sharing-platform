@@ -7,6 +7,10 @@ const SubCategorySchema = Schema({
         type: String,
         required: true
     },
+    topCtg: {
+        type: Schema.Types.ObjectId,
+        ref: "TopCategory"
+    },
     files: [
         {
             type: Schema.Types.ObjectId,

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <% include partials/head.ejs %>
+</head>
+
+<body>
+    <header>
+        <% include partials/header.ejs %>
+    </header>
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            <div class="col-11">
+                <h1 class="mb-3"><%= pagetitle %></h1>
+                <ul class="list-group files-item">
+                    <% if(!filesForReview || !filesForReview.length){ %>
+                        <li class="list-group-item">Nothing for Review</li>
+                    <% }else { %>
+                        <% filesForReview.forEach(item => { %>
+                        <li class="list-group-item">
+                            <p class="author-confirm">Author: <%= item.author %></p>
+                            <div class="files">
+                                <% item.fileNames.forEach(fileName => { %>
+                                <p><%= fileName %></p>
+                                <% }); %>
+                            </div>
+                            <button id="accept-btn" value="accept" name="<%= item.objectID %>"
+                                class="btn btn-primary">Accept</button>
+                            <button id="decline-btn" value="decline" name="<%= item.objectID %>"
+                                class="btn btn-danger">Decline</button>
+                        </li>
+                        <% }); %>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const allButtonElms = document.querySelectorAll('.btn');
+
+            const filesGroupElm = document.querySelector('.files-item')
+            console.log(filesGroupElm);
+
+            // add events to buttons
+            allButtonElms.forEach(btn => {
+                btn.addEventListener('click', handleActionOnFiles);
+            });
+
+            function handleActionOnFiles(e) {
+
+                fetch('/api/confirmfiles', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json, text/plain, */*',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        objectID: e.target.name,
+                        action: e.target.value
+                    })
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if(result.msg === 'success'){
+                            filesGroupElm.removeChild(e.target.parentElement);
+                        }else {
+                            // show error msg on ui
+                            console.log(result.msg);
+                        }
+
+                    })
+                    .catch(err => console.log(err));
+
+            }
+        });
+    </script>
+</body>
+
+</html>
